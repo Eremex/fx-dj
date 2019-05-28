@@ -459,7 +459,7 @@ parser = argparse.ArgumentParser(description='Eremex FX-DJ v1.6')
 #
 #Adjust arguments.
 # 
-parser.add_argument('-a',  dest='alias', required=True, metavar='Alias',
+parser.add_argument('-a',  dest='alias', metavar='Alias',
                     help='default \"interfaces to implementation\" mapping')
 parser.add_argument('-t',  dest='target', required=True, metavar='Target',
                     help='target interface to be built')
@@ -522,7 +522,7 @@ files = fx_dj_get_all_files(src_dir)
 headers = fx_dj_filter_ext(files, '.h')
 
 if args.v is True:
-    print '\nInterface headers:\n'
+    print '\nAll headers:\n'
     for h in headers:
         print osp.abspath(h)
 
