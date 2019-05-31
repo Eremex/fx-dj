@@ -140,8 +140,9 @@ def fx_dj_get_implementations(sources, empty_prepr_cmd):
 def fx_dj_get_aliases(linkage):
     aliases = []
     
-    #Get file content.
-    with open(linkage, 'r') as f: aliases = re.findall('(\w+)\s+=\s+(\w+)', f.read())
+    if linkage:
+        #Get file content.
+        with open(linkage, 'r') as f: aliases = re.findall('(\w+)\s+=\s+(\w+)', f.read())
 
     #Get list of pairs (default interface name, implementation name).
     return aliases
