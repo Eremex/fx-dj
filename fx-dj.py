@@ -167,7 +167,10 @@ def fx_dj_generate_root_interface_file(root, ifces, aliases):
                '\n\n']
     
     predefs = ['#define ____INTERFACE(I) INTERFACE____##I \n\n',
-               '#define FX_INTERFACE(I) ____INTERFACE(I) \n\n']
+               '#define FX_INTERFACE(I) ____INTERFACE(I) \n\n',
+			   '#ifndef FX_DJ_PREPROCESS_STAGE \n\n',
+			   '#define FX_METADATA(x) \n\n',
+			   '#endif \n\n']
     
     footer  = ['#endif\n']
 
