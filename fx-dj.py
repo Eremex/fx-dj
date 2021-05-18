@@ -52,8 +52,8 @@ def fx_dj_get_exports(filename, empty_prepr_cmd, regexp):
         export = re.search(regexp, f.read())
         if export is not None:
             return ((export.group(1), export.group(2)), filename)
-    return (tuple(), filename)                         
-    
+    return (tuple(), filename)
+
 #-------------------------------------------------------------------------------
 # Gets dictionary[interface] = filename.
 # @param headers List of headers (strings, representing paths to headers).
@@ -65,14 +65,14 @@ def fx_dj_get_interfaces(headers, empty_prepr_cmd):
     for filename in headers:
         exports, header_name = fx_dj_get_exports(
             filename,
-            empty_prepr_cmd, 
+            empty_prepr_cmd,
             'FX_METADATA\(\(\{\s*interface:\s+\[\s*(\w+)\s*,\s*(\w+)\s*\]\s+\}\)\)'
         )
         if len(exports) > 0:
             if exports not in dic:
                 dic[exports] = header_name
             else:
-                raise Exception('Interface duplication %s %s %s' % 
+                raise Exception('Interface duplication %s %s %s' %
                     (exports, dic[exports], header_name))
     return dic
 
@@ -83,23 +83,23 @@ def fx_dj_get_interfaces(headers, empty_prepr_cmd):
 # @return List of entities like (exported_implementations_list, filename).
 
 def fx_dj_get_implementations(sources, empty_prepr_cmd):
-    exports = [ 
+    exports = [
         fx_dj_get_exports(
-            s, 
-            empty_prepr_cmd, 
+            s,
+            empty_prepr_cmd,
             'FX_METADATA\(\(\{\s*implementation:\s+\[\s*(\w+)\s*,\s*(\w+)\s*\]\s+\}\)\)'
-        ) for s in sources 
+        ) for s in sources
     ]
     return list(filter(lambda item: len(item[0]) != 0, exports))
 
 #-------------------------------------------------------------------------------
 # Gets list of tuples (default_interface, implementation) by alias file.
 # @param linkage Path to alias file, containing implementation to interface map.
-# @return List of entities like (default_interface_name, implementation_name). 
+# @return List of entities like (default_interface_name, implementation_name).
 
 def fx_dj_get_aliases(linkage):
     aliases = []
-    with open(linkage, 'r') as f: 
+    with open(linkage, 'r') as f:
         aliases = re.findall('(\w+)\s+=\s+(\w+)', f.read())
     return aliases
 
@@ -118,22 +118,22 @@ def fx_dj_generate_root_header(root, ifces, aliases):
                '#define FX_INTERFACE(I) ____INTERFACE(I) \n\n']
     footer  = ['#endif\n']
 
-    defs = [ '#define\t %s \"%s\" \n' % 
+    defs = [ '#define\t %s \"%s\" \n' %
         (pfx + i + '____' + impl,path) for ((i,impl),path) in ifces.items()]
 
     i2impl = {}
     for x in ifces.items():
         i2impl.setdefault(x[0][0], []).append(x[0][1])
 
-    explicit = [ '#define\t %s \t\t %s \n' % 
+    explicit = [ '#define\t %s \t\t %s \n' %
         (pfx + i, pfx + i + '____' + impl) for (i, impl) in aliases ]
 
-    implicit = [ '#define\t %s \t\t %s \n' % 
-        (pfx + k, pfx + k + '____' + v[0]) 
+    implicit = [ '#define\t %s \t\t %s \n' %
+        (pfx + k, pfx + k + '____' + v[0])
             for (k,v) in i2impl.items() if len(v)==1 and k not in explicit ]
 
     result = header + notes + predefs + defs + explicit + implicit + footer
-    with open(root, 'w+') as root_file: 
+    with open(root, 'w+') as root_file:
         for line in result:root_file.write(line)
 
 #-------------------------------------------------------------------------------
@@ -156,14 +156,14 @@ def fx_dj_get_dependencies(f, r, cmd):
 # equal to interface name and value is equal to tuple:
 # (list of files implementing interface, dependencies, "already processed" flag)
 # Flag is needed in order to prevent infinite cycles in case of cross-deps.
-# @param targets Target interface to be built. It is equal to user-specified 
+# @param targets Target interface to be built. It is equal to user-specified
 # target interface for first-time call (list with one item).
 # @param objs Files to be built in order to implement target interface.
 # @return None.
 
 def fx_dj_get_sources_by_graph(dep, targets, objs, gd):
     for target in targets:
-        if target not in dep: 
+        if target not in dep:
             dep[target] = ([], [], True)
             continue
         files, dependencies, already_processed = dep[target]
@@ -176,7 +176,7 @@ def fx_dj_get_sources_by_graph(dep, targets, objs, gd):
 #-------------------------------------------------------------------------------
 # Simple test of C preprocessor, which is passed as command line.
 # @param cmd_line Command line which is used to call preprocessor.
-# It receives two arguemtns: force include file and file to be preprocessed.    
+# It receives two arguemtns: force include file and file to be preprocessed.
 # @return True if preprocessor test is passed, False otherwise.
 
 def fx_dj_test_preprocessor(cmd_line):
@@ -188,7 +188,7 @@ def fx_dj_test_preprocessor(cmd_line):
     tmp_hdr.write('#define TEST PASSED\r')
     tmp_hdr.close()
     stdout = str(subprocess.check_output(
-        cmd_line % (tmp_hdr.name, tmp_src.name), 
+        cmd_line % (tmp_hdr.name, tmp_src.name),
         shell=True
     ))
     os.remove('tmp_src.c')
@@ -261,9 +261,9 @@ for folder in src_dir:
             abs_src_dirs.extend( [os.path.join(root, f) for f in files] )
     else:
         os.path.walk(
-            folder, 
-            lambda arg, dir, files: 
-                arg.extend( [os.path.join(dir, f) for f in files] ), 
+            folder,
+            lambda arg, dir, files:
+                arg.extend( [os.path.join(dir, f) for f in files] ),
             abs_src_dirs
         )
 files = list(filter(lambda pathname: os.path.isfile(pathname), abs_src_dirs))
@@ -279,7 +279,7 @@ if args.v is True:
         print(os.path.abspath(h))
 
 # Not used, but saved as a parameter for possible further changes.
-#        
+#
 empty_prepr_cmd = ''
 
 #-------------------------------------------------------------------------------
@@ -298,11 +298,11 @@ if args.v is True:
 aliases = fx_dj_get_aliases(args.alias)
 
 #-------------------------------------------------------------------------------
-# On some platforms there may be problems with absolute paths in common header. 
-# They may be fixed by using relative paths, in this case you should provide 
-# base include folder as a parameter (-I key). If the parameter is specified, 
+# On some platforms there may be problems with absolute paths in common header.
+# They may be fixed by using relative paths, in this case you should provide
+# base include folder as a parameter (-I key). If the parameter is specified,
 # all interface-header mappings are generated in relative form.
-# __WARNING!!!__ BECAUSE PREPROCESSOR IS USED TO GET FILE DEPENDENCIES, IF YOU 
+# __WARNING!!!__ BECAUSE PREPROCESSOR IS USED TO GET FILE DEPENDENCIES, IF YOU
 # USE RELATIVE PATHS YOU SHOULD SET THE SAME FOLDER IN PREPROCESSOR COMMAND LINE
 # (IN FX_PREP ENV. VARIABLE) FOR DEFAULT INCLUDE PATH!
 #
@@ -322,12 +322,12 @@ else:
 # Determine implemetation of target interface specified in command line.
 
 target_impl = None
-for (i, impl) in aliases: 
-    if i == args.target: 
+for (i, impl) in aliases:
+    if i == args.target:
         target_impl = impl
         break
 if target_impl == None:
-    target_impls = [impl 
+    target_impls = [impl
         for (i, impl) in interfaces_to_hdr_map.keys() if i == args.target]
     if len(target_impls) == 0:
         print('No implementations found for target interface!')
@@ -357,7 +357,7 @@ root_file = os.path.abspath(args.common_hdr)
 fx_dj_generate_root_header(root_file, interfaces_to_hdr_map, aliases)
 
 #-------------------------------------------------------------------------------
-# Create dependency graph (fill only interface->implementation_files mapping).    
+# Create dependency graph (fill only interface->implementation_files mapping).
 #
 deps = {}
 for impl_lst, src in impls:
@@ -365,7 +365,7 @@ for impl_lst, src in impls:
     impl_file.append(src)
 
 #-------------------------------------------------------------------------------
-# Get files to be built into "output_files". 
+# Get files to be built into "output_files".
 # This phase also fills dependency graph with dependencies.
 # Lambda expression which return list of dependencies for list of files.
 #
@@ -376,7 +376,7 @@ fx_dj_get_sources_by_graph(
     deps,
     [target_interface],
     output_files,
-    lambda files: 
+    lambda files:
         [d for f in files
             for d in fx_dj_get_dependencies("\"%s\"" % f, root_file, prepr_cmd)]
 )
@@ -403,7 +403,7 @@ if os.path.exists(args.o) and os.path.isdir(args.o):
             j = j + 1
         return (files, item[1])
 
-    included_interfaces = { 
+    included_interfaces = {
         k for k, (_, _, included) in deps.items() if included == True
     }
 
@@ -425,7 +425,7 @@ if os.path.exists(args.o) and os.path.isdir(args.o):
 
     for k, v in files_map.items():
         files_with_same_name, _ = v
-        if len(files_with_same_name) > 1: 
+        if len(files_with_same_name) > 1:
             translated_srcs.append(fx_dj_transform_filename(v))
         else:
             translated_srcs.append(v)
@@ -437,7 +437,7 @@ if os.path.exists(args.o) and os.path.isdir(args.o):
             dst = os.path.join(args.o, n)
             if args.v is True:
                 print ('Copying %s to %s' % (src, dst))
-            shutil.copyfile(src, dst)  
+            shutil.copyfile(src, dst)
 else:
     with open(args.o, 'w+') as f:
         for src_file in output_files: f.write(src_file + '\n')
